@@ -593,12 +593,15 @@ public:
 
 			ImGui::SetNextWindowPos(
 				  ImVec2(m_width - m_width / 5.0f - 10.0f, 10.0f)
-				, ImGuiSetCond_FirstUseEver
+				, ImGuiCond_FirstUseEver
+				);
+			ImGui::SetNextWindowSize(
+				  ImVec2(m_width / 5.0f, m_height / 3.0f)
+				, ImGuiCond_FirstUseEver
 				);
 			ImGui::Begin("Settings"
 				, NULL
-				, ImVec2(m_width / 5.0f, m_height / 3.0f)
-				, ImGuiWindowFlags_AlwaysAutoResize
+				, 0
 				);
 
 			ImGui::SliderFloat("RSM Amount",      &m_rsmAmount, 0.0f, 0.7f);
@@ -673,9 +676,9 @@ public:
 	{
 		float el = m_lightElevation * (bx::kPi/180.0f);
 		float az = m_lightAzimuth   * (bx::kPi/180.0f);
-		m_lightDir[0] = bx::fcos(el)*bx::fcos(az);
-		m_lightDir[2] = bx::fcos(el)*bx::fsin(az);
-		m_lightDir[1] = bx::fsin(el);
+		m_lightDir[0] = bx::cos(el)*bx::cos(az);
+		m_lightDir[2] = bx::cos(el)*bx::sin(az);
+		m_lightDir[1] = bx::sin(el);
 		m_lightDir[3] = 0.0f;
 	}
 

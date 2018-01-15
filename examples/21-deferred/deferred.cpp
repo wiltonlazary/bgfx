@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -204,7 +204,7 @@ public:
 
 		m_width  = _width;
 		m_height = _height;
-		m_debug  = BGFX_DEBUG_NONE;
+		m_debug  = BGFX_DEBUG_TEXT;
 		m_reset  = BGFX_RESET_VSYNC;
 
 		bgfx::init(args.m_type, args.m_pciId);
@@ -436,12 +436,15 @@ public:
 
 				ImGui::SetNextWindowPos(
 					  ImVec2(m_width - m_width / 5.0f - 10.0f, 10.0f)
-					, ImGuiSetCond_FirstUseEver
+					, ImGuiCond_FirstUseEver
+					);
+				ImGui::SetNextWindowSize(
+					  ImVec2(m_width / 5.0f, m_height / 3.0f)
+					, ImGuiCond_FirstUseEver
 					);
 				ImGui::Begin("Settings"
 					, NULL
-					, ImVec2(m_width / 5.0f, m_height / 3.0f)
-					, ImGuiWindowFlags_AlwaysAutoResize
+					, 0
 					);
 
 				ImGui::SliderInt("Num lights", &m_numLights, 1, 2048);
@@ -545,10 +548,10 @@ public:
 				{
 					Sphere lightPosRadius;
 
-					float lightTime = time * m_lightAnimationSpeed * (bx::fsin(light/float(m_numLights) * bx::kPiHalf ) * 0.5f + 0.5f);
-					lightPosRadius.m_center[0] = bx::fsin( ( (lightTime + light*0.47f) + bx::kPiHalf*1.37f ) )*offset;
-					lightPosRadius.m_center[1] = bx::fcos( ( (lightTime + light*0.69f) + bx::kPiHalf*1.49f ) )*offset;
-					lightPosRadius.m_center[2] = bx::fsin( ( (lightTime + light*0.37f) + bx::kPiHalf*1.57f ) )*2.0f;
+					float lightTime = time * m_lightAnimationSpeed * (bx::sin(light/float(m_numLights) * bx::kPiHalf ) * 0.5f + 0.5f);
+					lightPosRadius.m_center[0] = bx::sin( ( (lightTime + light*0.47f) + bx::kPiHalf*1.37f ) )*offset;
+					lightPosRadius.m_center[1] = bx::cos( ( (lightTime + light*0.69f) + bx::kPiHalf*1.49f ) )*offset;
+					lightPosRadius.m_center[2] = bx::sin( ( (lightTime + light*0.37f) + bx::kPiHalf*1.57f ) )*2.0f;
 					lightPosRadius.m_radius = 2.0f;
 
 					Aabb aabb;
@@ -577,20 +580,20 @@ public:
 					for (uint32_t ii = 1; ii < 8; ++ii)
 					{
 						bx::vec3MulMtxH(xyz, box[ii], vp);
-						minx = bx::fmin(minx, xyz[0]);
-						miny = bx::fmin(miny, xyz[1]);
-						maxx = bx::fmax(maxx, xyz[0]);
-						maxy = bx::fmax(maxy, xyz[1]);
-						maxz = bx::fmax(maxz, xyz[2]);
+						minx = bx::min(minx, xyz[0]);
+						miny = bx::min(miny, xyz[1]);
+						maxx = bx::max(maxx, xyz[0]);
+						maxy = bx::max(maxy, xyz[1]);
+						maxz = bx::max(maxz, xyz[2]);
 					}
 
 					// Cull light if it's fully behind camera.
 					if (maxz >= 0.0f)
 					{
-						float x0 = bx::fclamp( (minx * 0.5f + 0.5f) * m_width,  0.0f, (float)m_width);
-						float y0 = bx::fclamp( (miny * 0.5f + 0.5f) * m_height, 0.0f, (float)m_height);
-						float x1 = bx::fclamp( (maxx * 0.5f + 0.5f) * m_width,  0.0f, (float)m_width);
-						float y1 = bx::fclamp( (maxy * 0.5f + 0.5f) * m_height, 0.0f, (float)m_height);
+						float x0 = bx::clamp( (minx * 0.5f + 0.5f) * m_width,  0.0f, (float)m_width);
+						float y0 = bx::clamp( (miny * 0.5f + 0.5f) * m_height, 0.0f, (float)m_height);
+						float x1 = bx::clamp( (maxx * 0.5f + 0.5f) * m_width,  0.0f, (float)m_width);
+						float y1 = bx::clamp( (maxy * 0.5f + 0.5f) * m_height, 0.0f, (float)m_height);
 
 						if (m_showScissorRects)
 						{

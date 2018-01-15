@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -339,12 +339,15 @@ public:
 
 			ImGui::SetNextWindowPos(
 				  ImVec2(m_width - m_width / 5.0f - 10.0f, 10.0f)
-				, ImGuiSetCond_FirstUseEver
+				, ImGuiCond_FirstUseEver
+				);
+			ImGui::SetNextWindowSize(
+				  ImVec2(m_width / 5.0f, m_height / 2.0f)
+				, ImGuiCond_FirstUseEver
 				);
 			ImGui::Begin("Settings"
 				, NULL
-				, ImVec2(m_width / 5.0f, m_height / 2.0f)
-				, ImGuiWindowFlags_AlwaysAutoResize
+				, 0
 				);
 
 			ImGui::SliderFloat("Speed", &m_speed, 0.0f, 1.0f);
@@ -358,7 +361,7 @@ public:
 			{
 				union { uint32_t color; uint8_t bgra[4]; } cast = { m_lumBgra8 };
 				float exponent = cast.bgra[3]/255.0f * 255.0f - 128.0f;
-				float lumAvg   = cast.bgra[2]/255.0f * bx::fexp2(exponent);
+				float lumAvg   = cast.bgra[2]/255.0f * bx::exp2(exponent);
 				ImGui::SliderFloat("Lum Avg", &lumAvg, 0.0f, 1.0f);
 			}
 
@@ -378,19 +381,19 @@ public:
 
 			m_time += (float)(frameTime*m_speed/freq);
 
-			uint8_t shuffle[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+			bgfx::ViewId shuffle[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 			bx::shuffle(&m_rng, shuffle, BX_COUNTOF(shuffle) );
 
-			uint8_t hdrSkybox       = shuffle[0];
-			uint8_t hdrMesh         = shuffle[1];
-			uint8_t hdrLuminance    = shuffle[2];
-			uint8_t hdrLumScale0    = shuffle[3];
-			uint8_t hdrLumScale1    = shuffle[4];
-			uint8_t hdrLumScale2    = shuffle[5];
-			uint8_t hdrLumScale3    = shuffle[6];
-			uint8_t hdrBrightness   = shuffle[7];
-			uint8_t hdrVBlur        = shuffle[8];
-			uint8_t hdrHBlurTonemap = shuffle[9];
+			bgfx::ViewId hdrSkybox       = shuffle[0];
+			bgfx::ViewId hdrMesh         = shuffle[1];
+			bgfx::ViewId hdrLuminance    = shuffle[2];
+			bgfx::ViewId hdrLumScale0    = shuffle[3];
+			bgfx::ViewId hdrLumScale1    = shuffle[4];
+			bgfx::ViewId hdrLumScale2    = shuffle[5];
+			bgfx::ViewId hdrLumScale3    = shuffle[6];
+			bgfx::ViewId hdrBrightness   = shuffle[7];
+			bgfx::ViewId hdrVBlur        = shuffle[8];
+			bgfx::ViewId hdrHBlurTonemap = shuffle[9];
 
 			// Set views.
 			bgfx::setViewName(hdrSkybox, "Skybox");
@@ -440,7 +443,7 @@ public:
 			float proj[16];
 			bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f, 0.0f, caps->homogeneousDepth);
 
-			uint8_t order[] =
+			bgfx::ViewId order[] =
 			{
 				hdrSkybox,
 				hdrMesh,
@@ -480,7 +483,7 @@ public:
 			// Set view and projection matrix for view hdrMesh.
 			bgfx::setViewTransform(hdrMesh, view, proj);
 
-			float tonemap[4] = { m_middleGray, bx::fsq(m_white), m_threshold, m_time };
+			float tonemap[4] = { m_middleGray, bx::square(m_white), m_threshold, m_time };
 
 			// Render skybox into view hdrSkybox.
 			bgfx::setTexture(0, s_texCube, m_uffizi);

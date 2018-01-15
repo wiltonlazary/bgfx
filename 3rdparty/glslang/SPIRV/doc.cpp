@@ -49,6 +49,7 @@ namespace spv {
     extern "C" {
         // Include C-based headers that don't have a namespace
         #include "GLSL.ext.KHR.h"
+        #include "GLSL.ext.EXT.h"
 #ifdef AMD_EXTENSIONS
         #include "GLSL.ext.AMD.h"
 #endif
@@ -350,6 +351,8 @@ const char* BuiltInString(int builtIn)
     case 5261: return "PositionPerViewNV";
     case 5262: return "ViewportMaskPerViewNV";
 #endif
+
+    case 5264: return "FullyCoveredEXT";
 
     case BuiltInCeiling:
     default: return "Bad";
@@ -847,6 +850,7 @@ const char* CapabilityString(int info)
 
 #ifdef AMD_EXTENSIONS
     case 5009: return "ImageGatherBiasLodAMD";
+    case 5010: return "FragmentMaskAMD";
     case 5015: return "ImageReadWriteLodAMD";
 #endif
 
@@ -860,6 +864,8 @@ const char* CapabilityString(int info)
     case 5259: return "ShaderStereoViewNV";
     case 5260: return "PerViewAttributesNV";
 #endif
+
+    case 5265: return "FragmentFullyCoveredEXT";
 
     case CapabilityCeiling:
     default: return "Bad";
@@ -1207,6 +1213,9 @@ const char* OpcodeString(int op)
     case 5005: return "OpGroupFMaxNonUniformAMD";
     case 5006: return "OpGroupUMaxNonUniformAMD";
     case 5007: return "OpGroupSMaxNonUniformAMD";
+
+    case 5011: return "OpFragmentMaskFetchAMD";
+    case 5012: return "OpFragmentFetchAMD";
 #endif
 
     case OpcodeCeiling:
@@ -2869,6 +2878,15 @@ void Parameterize()
     InstructionDesc[OpGroupFMaxNonUniformAMD].operands.push(OperandScope, "'Execution'");
     InstructionDesc[OpGroupFMaxNonUniformAMD].operands.push(OperandGroupOperation, "'Operation'");
     InstructionDesc[OpGroupFMaxNonUniformAMD].operands.push(OperandId, "X");
+
+    InstructionDesc[OpFragmentMaskFetchAMD].capabilities.push_back(CapabilityFragmentMaskAMD);
+    InstructionDesc[OpFragmentMaskFetchAMD].operands.push(OperandId, "'Image'");
+    InstructionDesc[OpFragmentMaskFetchAMD].operands.push(OperandId, "'Coordinate'");
+
+    InstructionDesc[OpFragmentFetchAMD].capabilities.push_back(CapabilityFragmentMaskAMD);
+    InstructionDesc[OpFragmentFetchAMD].operands.push(OperandId, "'Image'");
+    InstructionDesc[OpFragmentFetchAMD].operands.push(OperandId, "'Coordinate'");
+    InstructionDesc[OpFragmentFetchAMD].operands.push(OperandId, "'Fragment Index'");
 #endif
 }
 

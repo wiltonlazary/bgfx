@@ -116,7 +116,7 @@ struct Camera
 		bx::vec3ToLatLong(&ll[0], &ll[1], toPosNorm);
 		ll[0] += consume[0];
 		ll[1] -= consume[1];
-		ll[1]  = bx::fclamp(ll[1], 0.02f, 0.98f);
+		ll[1]  = bx::clamp(ll[1], 0.02f, 0.98f);
 
 		float tmp[3];
 		bx::vec3FromLatLong(tmp, ll[0], ll[1]);
@@ -136,16 +136,16 @@ struct Camera
 
 	void update(float _dt)
 	{
-		const float amount = bx::fmin(_dt/0.12f, 1.0f);
+		const float amount = bx::min(_dt/0.12f, 1.0f);
 
 		consumeOrbit(amount);
 
-		m_target.curr[0] = bx::flerp(m_target.curr[0], m_target.dest[0], amount);
-		m_target.curr[1] = bx::flerp(m_target.curr[1], m_target.dest[1], amount);
-		m_target.curr[2] = bx::flerp(m_target.curr[2], m_target.dest[2], amount);
-		m_pos.curr[0] = bx::flerp(m_pos.curr[0], m_pos.dest[0], amount);
-		m_pos.curr[1] = bx::flerp(m_pos.curr[1], m_pos.dest[1], amount);
-		m_pos.curr[2] = bx::flerp(m_pos.curr[2], m_pos.dest[2], amount);
+		m_target.curr[0] = bx::lerp(m_target.curr[0], m_target.dest[0], amount);
+		m_target.curr[1] = bx::lerp(m_target.curr[1], m_target.dest[1], amount);
+		m_target.curr[2] = bx::lerp(m_target.curr[2], m_target.dest[2], amount);
+		m_pos.curr[0]    = bx::lerp(m_pos.curr[0], m_pos.dest[0], amount);
+		m_pos.curr[1]    = bx::lerp(m_pos.curr[1], m_pos.dest[1], amount);
+		m_pos.curr[2]    = bx::lerp(m_pos.curr[2], m_pos.dest[2], amount);
 	}
 
 	struct Interp3f
@@ -385,12 +385,15 @@ public:
 
 			ImGui::SetNextWindowPos(
 				  ImVec2(m_width - m_width / 5.0f - 10.0f, 10.0f)
-				, ImGuiSetCond_FirstUseEver
+				, ImGuiCond_FirstUseEver
+				);
+			ImGui::SetNextWindowSize(
+				  ImVec2(m_width / 5.0f, m_height * 0.75f)
+				, ImGuiCond_FirstUseEver
 				);
 			ImGui::Begin("Settings"
 				, NULL
-				, ImVec2(m_width / 5.0f, m_height * 0.75f)
-				, ImGuiWindowFlags_AlwaysAutoResize
+				, 0
 				);
 
 			ImGui::Separator();

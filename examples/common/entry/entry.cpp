@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -24,6 +24,8 @@ namespace entry
 {
 	static uint32_t s_debug = BGFX_DEBUG_NONE;
 	static uint32_t s_reset = BGFX_RESET_NONE;
+	static uint32_t s_width = ENTRY_DEFAULT_WIDTH;
+	static uint32_t s_height = ENTRY_DEFAULT_HEIGHT;
 	static bool s_exit = false;
 
 	static bx::FileReaderI* s_fileReader = NULL;
@@ -238,7 +240,11 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 			if (_argc > arg)
 			{
 				_flags &= ~_bit;
-				_flags |= bx::toBool(_argv[arg]) ? _bit : 0;
+
+				bool set = false;
+				bx::fromString(&set, _argv[arg]);
+
+				_flags |= set ? _bit : 0;
 			}
 			else
 			{
@@ -253,9 +259,19 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 
 	int cmdMouseLock(CmdContext* /*_context*/, void* /*_userData*/, int _argc, char const* const* _argv)
 	{
-		if (_argc > 1)
+		if (1 < _argc)
 		{
-			inputSetMouseLock(_argc > 1 ? bx::toBool(_argv[1]) : !inputIsMouseLocked() );
+			bool set = false;
+			if (2 < _argc)
+			{
+				bx::fromString(&set, _argv[1]);
+				inputSetMouseLock(set);
+			}
+			else
+			{
+				inputSetMouseLock(!inputIsMouseLocked() );
+			}
+
 			return bx::kExitSuccess;
 		}
 
@@ -494,11 +510,11 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 
 	int runApp(AppI* _app, int _argc, const char* const* _argv)
 	{
-		_app->init(_argc, _argv, ENTRY_DEFAULT_WIDTH, ENTRY_DEFAULT_HEIGHT);
+		_app->init(_argc, _argv, s_width, s_height);
 		bgfx::frame();
 
 		WindowHandle defaultWindow = { 0 };
-		setWindowSize(defaultWindow, ENTRY_DEFAULT_WIDTH, ENTRY_DEFAULT_HEIGHT);
+		setWindowSize(defaultWindow, s_width, s_height);
 
 #if BX_PLATFORM_EMSCRIPTEN
 		s_app = _app;
@@ -729,6 +745,13 @@ restart:
 				case Event::Suspend:
 					break;
 
+				case Event::DropFile:
+					{
+						const DropFileEvent* drop = static_cast<const DropFileEvent*>(ev);
+						DBG("%s", drop->m_filePath.get() );
+					}
+					break;
+
 				default:
 					break;
 				}
@@ -748,6 +771,9 @@ restart:
 
 		_debug = s_debug;
 
+		s_width = _width;
+		s_height = _height;
+
 		return s_exit;
 	}
 
@@ -761,6 +787,7 @@ restart:
 		WindowHandle handle = { UINT16_MAX };
 
 		bool mouseLock = inputIsMouseLocked();
+		bool clearDropFile = true;
 
 		const Event* ev;
 		do
@@ -881,6 +908,14 @@ restart:
 				case Event::Suspend:
 					break;
 
+				case Event::DropFile:
+					{
+						const DropFileEvent* drop = static_cast<const DropFileEvent*>(ev);
+						win.m_dropFile = drop->m_filePath;
+						clearDropFile = false;
+					}
+					break;
+
 				default:
 					break;
 				}
@@ -892,7 +927,12 @@ restart:
 
 		if (isValid(handle) )
 		{
-			const WindowState& win = s_window[handle.idx];
+			WindowState& win = s_window[handle.idx];
+			if (clearDropFile)
+			{
+				win.m_dropFile.clear();
+			}
+
 			_state = win;
 
 			if (handle.idx == 0)
@@ -925,6 +965,11 @@ restart:
 
 	bx::AllocatorI* getAllocator()
 	{
+		if (NULL == g_allocator)
+		{
+			g_allocator = getDefaultAllocator();
+		}
+
 		return g_allocator;
 	}
 

@@ -336,6 +336,8 @@ void HlslScanContext::fillInKeywordMap()
     (*KeywordMap)["RWTexture2DArray"] =        EHTokRWTexture2darray;
     (*KeywordMap)["RWTexture3D"] =             EHTokRWTexture3d;
     (*KeywordMap)["RWBuffer"] =                EHTokRWBuffer;
+    (*KeywordMap)["SubpassInput"] =            EHTokSubpassInput;
+    (*KeywordMap)["SubpassInputMS"] =          EHTokSubpassInputMS;
 
     (*KeywordMap)["AppendStructuredBuffer"] =  EHTokAppendStructuredBuffer;
     (*KeywordMap)["ByteAddressBuffer"] =       EHTokByteAddressBuffer;
@@ -343,6 +345,7 @@ void HlslScanContext::fillInKeywordMap()
     (*KeywordMap)["RWByteAddressBuffer"] =     EHTokRWByteAddressBuffer;
     (*KeywordMap)["RWStructuredBuffer"] =      EHTokRWStructuredBuffer;
     (*KeywordMap)["StructuredBuffer"] =        EHTokStructuredBuffer;
+    (*KeywordMap)["TextureBuffer"] =           EHTokTextureBuffer;
 
     (*KeywordMap)["class"] =                   EHTokClass;
     (*KeywordMap)["struct"] =                  EHTokStruct;
@@ -562,10 +565,15 @@ EHlslTokenClass HlslScanContext::tokenizeClass(HlslToken& token)
         case EndOfInput:               return EHTokNone;
 
         default:
-            char buf[2];
-            buf[0] = (char)token;
-            buf[1] = 0;
-            parseContext.error(loc, "unexpected token", buf, "");
+            if (token < PpAtomMaxSingle) {
+                char buf[2];
+                buf[0] = (char)token;
+                buf[1] = 0;
+                parseContext.error(loc, "unexpected token", buf, "");
+            } else if (tokenText[0] != 0)
+                parseContext.error(loc, "unexpected token", tokenText, "");
+            else
+                parseContext.error(loc, "unexpected token", "", "");
             break;
         }
     } while (true);
@@ -827,6 +835,9 @@ EHlslTokenClass HlslScanContext::tokenizeIdentifier()
     case EHTokRWByteAddressBuffer:
     case EHTokRWStructuredBuffer:
     case EHTokStructuredBuffer:
+    case EHTokTextureBuffer:
+    case EHTokSubpassInput:
+    case EHTokSubpassInputMS:
         return keyword;
 
     // variable, user type, ...

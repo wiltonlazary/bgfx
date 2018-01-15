@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2017 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2018 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -1072,12 +1072,12 @@ namespace bgfx
 		{
 			case DxbcOpcode::CUSTOMDATA:
 				{
-//					uint32_t dataClass;
+					_instruction.numOperands = 0;
 					size += bx::read(_reader, _instruction.length);
-					for (uint32_t ii = 0, num = (_instruction.length-2)/4; ii < num; ++ii)
+					for (uint32_t ii = 0, num = (_instruction.length-2); ii < num; ++ii)
 					{
-						char temp[16];
-						size += bx::read(_reader, temp, 16, _err);
+						char temp[4];
+						size += bx::read(_reader, temp, 4, _err);
 					}
 
 				}
@@ -1317,8 +1317,8 @@ namespace bgfx
 
 		switch (_instruction.opcode)
 		{
-//			case DxbcOpcode::CUSTOMDATA:
-//				return size;
+			case DxbcOpcode::CUSTOMDATA:
+				return 0;
 
 			case DxbcOpcode::DCL_CONSTANT_BUFFER:
 				token |= _instruction.allowRefactoring ? UINT32_C(0x00000800) : 0;
@@ -1550,7 +1550,7 @@ namespace bgfx
 										, "%d + %s%d"
 										, operand.regIndex[jj]
 										, s_dxbcOperandType[operand.subOperand[jj].type]
-										, operand.regIndex[jj]
+										, operand.subOperand[jj].regIndex
 										);
 					break;
 
@@ -1767,7 +1767,7 @@ namespace bgfx
 			{
 			case DXBC_CHUNK_SHADER_EX:
 				_dxbc.shader.shex = true;
-				// fallthrough
+				BX_FALLTHROUGH;
 
 			case DXBC_CHUNK_SHADER:
 				size += read(_reader, _dxbc.shader, _err);

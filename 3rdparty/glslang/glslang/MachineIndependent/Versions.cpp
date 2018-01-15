@@ -154,6 +154,7 @@ void TParseVersions::initializeExtensionBehavior()
     extensionBehavior[E_GL_OES_standard_derivatives]         = EBhDisable;
     extensionBehavior[E_GL_EXT_frag_depth]                   = EBhDisable;
     extensionBehavior[E_GL_OES_EGL_image_external]           = EBhDisable;
+    extensionBehavior[E_GL_OES_EGL_image_external_essl3]     = EBhDisable;
     extensionBehavior[E_GL_EXT_shader_texture_lod]           = EBhDisable;
     extensionBehavior[E_GL_EXT_shadow_samplers]              = EBhDisable;
     extensionBehavior[E_GL_ARB_texture_rectangle]            = EBhDisable;
@@ -201,6 +202,7 @@ void TParseVersions::initializeExtensionBehavior()
     extensionBehavior[E_GL_AMD_texture_gather_bias_lod]              = EBhDisable;
     extensionBehavior[E_GL_AMD_gpu_shader_int16]                     = EBhDisable;
     extensionBehavior[E_GL_AMD_shader_image_load_store_lod]          = EBhDisable;
+    extensionBehavior[E_GL_AMD_shader_fragment_mask]                 = EBhDisable;
 #endif
 
 #ifdef NV_EXTENSIONS
@@ -209,6 +211,8 @@ void TParseVersions::initializeExtensionBehavior()
     extensionBehavior[E_GL_NV_viewport_array2]                       = EBhDisable;
     extensionBehavior[E_GL_NV_stereo_view_rendering]                 = EBhDisable;
     extensionBehavior[E_GL_NVX_multiview_per_view_attributes]        = EBhDisable;
+    extensionBehavior[E_GL_NV_shader_atomic_int64]                   = EBhDisable;
+    extensionBehavior[E_GL_NV_conservative_raster_underestimation]   = EBhDisable;
 #endif
 
     // AEP
@@ -260,6 +264,7 @@ void TParseVersions::getPreamble(std::string& preamble)
             "#define GL_OES_standard_derivatives 1\n"
             "#define GL_EXT_frag_depth 1\n"
             "#define GL_OES_EGL_image_external 1\n"
+            "#define GL_OES_EGL_image_external_essl3 1\n"
             "#define GL_EXT_shader_texture_lod 1\n"
             "#define GL_EXT_shadow_samplers 1\n"
 
@@ -333,12 +338,15 @@ void TParseVersions::getPreamble(std::string& preamble)
             "#define GL_AMD_texture_gather_bias_lod 1\n"
             "#define GL_AMD_gpu_shader_int16 1\n"
             "#define GL_AMD_shader_image_load_store_lod 1\n"
+            "#define GL_AMD_shader_fragment_mask 1\n"
 #endif
 
 #ifdef NV_EXTENSIONS
             "#define GL_NV_sample_mask_override_coverage 1\n"
             "#define GL_NV_geometry_shader_passthrough 1\n"
             "#define GL_NV_viewport_array2 1\n"
+            "#define GL_NV_shader_atomic_int64 1\n"
+            "#define GL_NV_conservative_raster_underestimation 1\n"
 #endif
             ;
 
@@ -562,7 +570,8 @@ bool TParseVersions::checkExtensionsRequested(const TSourceLoc& loc, int numExte
 //
 void TParseVersions::requireExtensions(const TSourceLoc& loc, int numExtensions, const char* const extensions[], const char* featureDesc)
 {
-    if (checkExtensionsRequested(loc, numExtensions, extensions, featureDesc)) return;
+    if (checkExtensionsRequested(loc, numExtensions, extensions, featureDesc))
+        return;
 
     // If we get this far, give errors explaining what extensions are needed
     if (numExtensions == 1)
@@ -580,7 +589,8 @@ void TParseVersions::requireExtensions(const TSourceLoc& loc, int numExtensions,
 //
 void TParseVersions::ppRequireExtensions(const TSourceLoc& loc, int numExtensions, const char* const extensions[], const char* featureDesc)
 {
-    if (checkExtensionsRequested(loc, numExtensions, extensions, featureDesc)) return;
+    if (checkExtensionsRequested(loc, numExtensions, extensions, featureDesc))
+        return;
 
     // If we get this far, give errors explaining what extensions are needed
     if (numExtensions == 1)
@@ -618,7 +628,8 @@ bool TParseVersions::extensionTurnedOn(const char* const extension)
 bool TParseVersions::extensionsTurnedOn(int numExtensions, const char* const extensions[])
 {
     for (int i = 0; i < numExtensions; ++i) {
-        if (extensionTurnedOn(extensions[i])) return true;
+        if (extensionTurnedOn(extensions[i]))
+            return true;
     }
     return false;
 }
