@@ -1,14 +1,14 @@
 /*
  * Copyright 2014 Kai Jourdan. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
- *
- * Based on code from Brian Luczkiewicz
- * https://github.com/blucz/Vector
- *
- * Uses the SIMPLEX-Font which is a variant of the Hershey font (public domain)
- * http://paulbourke.net/dataformats/hershey/
  */
 
+// Reference(s):
+// - Based on code from Brian Luczkiewicz
+//   https://github.com/blucz/Vector
+// - Uses the SIMPLEX-Font which is a variant of the Hershey font (public domain)
+//   https://web.archive.org/web/20120313001837/http://paulbourke.net/dataformats/hershey/
+//
 #include <float.h>  // FLT_EPSILON
 #include <alloca.h> // alloca
 
@@ -35,7 +35,7 @@ const int HALF_TEXTURE_SIZE = TEXTURE_SIZE / 2;
 
 void PosColorUvVertex::init()
 {
-	ms_decl
+	ms_layout
 		.begin()
 		.add(bgfx::Attrib::Position,  3, bgfx::AttribType::Float)
 		.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
@@ -43,7 +43,7 @@ void PosColorUvVertex::init()
 		.end();
 }
 
-bgfx::VertexDecl PosColorUvVertex::ms_decl;
+bgfx::VertexLayout PosColorUvVertex::ms_layout;
 
 inline float normalizef(float _a)
 {
@@ -94,7 +94,7 @@ void VectorDisplay::setup(uint16_t _width, uint16_t _height, uint8_t _view)
 	m_blitShader         = loadProgram("vs_vectordisplay_fb", "fs_vectordisplay_blit");
 
 	u_params   = bgfx::createUniform("u_params",   bgfx::UniformType::Vec4);
-	s_texColor = bgfx::createUniform("s_texColor", bgfx::UniformType::Int1);
+	s_texColor = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
 
 	genLinetex();
 
@@ -163,10 +163,11 @@ void VectorDisplay::endFrame()
 
 	BX_CHECK(m_points.size() < MAX_NUMBER_VERTICES, "");
 
-	bgfx::updateDynamicVertexBuffer(m_vertexBuffers[m_currentDrawStep]
+	bgfx::update(
+		  m_vertexBuffers[m_currentDrawStep]
 		, 0
 		, bgfx::copy(m_points.data(), (uint32_t)m_points.size() * sizeof(PosColorUvVertex) )
-	);
+		);
 	m_vertexBuffersSize[m_currentDrawStep] = (uint32_t)m_points.size();
 
 	for (int loopvar = 0; loopvar < m_numberDecaySteps; loopvar++)
@@ -198,8 +199,8 @@ void VectorDisplay::endFrame()
 			bgfx::setVertexBuffer(0, m_vertexBuffers[i], 0, m_vertexBuffersSize[i]); // explicitly feed vertex number!
 
 			bgfx::setState(0
-				| BGFX_STATE_RGB_WRITE
-				| BGFX_STATE_ALPHA_WRITE
+				| BGFX_STATE_WRITE_RGB
+				| BGFX_STATE_WRITE_A
 				| BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_DST_ALPHA)
 				| BGFX_STATE_BLEND_EQUATION_SEPARATE(BGFX_STATE_BLEND_EQUATION_ADD, BGFX_STATE_BLEND_EQUATION_MAX)
 				);
@@ -229,8 +230,8 @@ void VectorDisplay::endFrame()
 			bgfx::setViewFrameBuffer(viewCounter, m_glow0FrameBuffer);
 			bgfx::setViewRect(viewCounter, 0, 0, m_glowWidth, m_glowHeight);
 			bgfx::setState(0
-				| BGFX_STATE_RGB_WRITE
-				| BGFX_STATE_ALPHA_WRITE
+				| BGFX_STATE_WRITE_RGB
+				| BGFX_STATE_WRITE_A
 				);
 			params[0] = 1.0f / m_glowWidth;
 			params[1] = 0.0f;
@@ -257,8 +258,8 @@ void VectorDisplay::endFrame()
 			bgfx::setUniform(u_params, params);
 
 			bgfx::setState(0
-				| BGFX_STATE_RGB_WRITE
-				| BGFX_STATE_ALPHA_WRITE
+				| BGFX_STATE_WRITE_RGB
+				| BGFX_STATE_WRITE_A
 				);
 
 			bgfx::setViewName(viewCounter, "BlendPassB");
@@ -278,8 +279,8 @@ void VectorDisplay::endFrame()
 	bgfx::setViewRect(viewCounter, 0, 0, m_screenWidth, m_screenHeight);
 	bgfx::setTexture(0, s_texColor, bgfx::getTexture(m_sceneFrameBuffer) );
 	bgfx::setState(0
-		| BGFX_STATE_RGB_WRITE
-		| BGFX_STATE_ALPHA_WRITE
+		| BGFX_STATE_WRITE_RGB
+		| BGFX_STATE_WRITE_A
 		| BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_ONE)
 		);
 
@@ -298,8 +299,8 @@ void VectorDisplay::endFrame()
 		bgfx::setViewRect(viewCounter, 0, 0, m_screenWidth, m_screenHeight);
 		bgfx::setTexture(0, s_texColor, bgfx::getTexture(m_glow1FrameBuffer) );
 		bgfx::setState(0
-			| BGFX_STATE_RGB_WRITE
-			| BGFX_STATE_ALPHA_WRITE
+			| BGFX_STATE_WRITE_RGB
+			| BGFX_STATE_WRITE_A
 			| BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_ONE)
 			);
 
@@ -736,7 +737,7 @@ bool VectorDisplay::setDecaySteps(int _steps)
 
 	for (int i = 0; i < m_numberDecaySteps; ++i)
 	{
-		m_vertexBuffers.push_back(bgfx::createDynamicVertexBuffer(MAX_NUMBER_VERTICES, PosColorUvVertex::ms_decl) );
+		m_vertexBuffers.push_back(bgfx::createDynamicVertexBuffer(MAX_NUMBER_VERTICES, PosColorUvVertex::ms_layout) );
 		m_vertexBuffersSize.push_back(0);
 	}
 
@@ -768,10 +769,10 @@ void VectorDisplay::getSize(float* _outWidth, float* _outHeight)
 
 void VectorDisplay::screenSpaceQuad(float _textureWidth, float _textureHeight, float _width, float _height)
 {
-	if (3 == getAvailTransientVertexBuffer(3, PosColorUvVertex::ms_decl) )
+	if (3 == getAvailTransientVertexBuffer(3, PosColorUvVertex::ms_layout) )
 	{
 		bgfx::TransientVertexBuffer vb;
-		bgfx::allocTransientVertexBuffer(&vb, 3, PosColorUvVertex::ms_decl);
+		bgfx::allocTransientVertexBuffer(&vb, 3, PosColorUvVertex::ms_layout);
 		PosColorUvVertex* vertex = (PosColorUvVertex*)vb.data;
 
 		const float zz = 0.0f;
@@ -826,21 +827,21 @@ void VectorDisplay::screenSpaceQuad(float _textureWidth, float _textureHeight, f
 
 void VectorDisplay::setupResDependent()
 {
-	const uint32_t samplerFlags = 0
+	const uint64_t tsFlags = 0
 		| BGFX_TEXTURE_RT
-		| BGFX_TEXTURE_MIN_POINT
-		| BGFX_TEXTURE_MAG_POINT
-		| BGFX_TEXTURE_MIP_POINT
-		| BGFX_TEXTURE_U_CLAMP
-		| BGFX_TEXTURE_V_CLAMP
+		| BGFX_SAMPLER_MIN_POINT
+		| BGFX_SAMPLER_MAG_POINT
+		| BGFX_SAMPLER_MIP_POINT
+		| BGFX_SAMPLER_U_CLAMP
+		| BGFX_SAMPLER_V_CLAMP
 		;
-	m_sceneFrameBuffer = bgfx::createFrameBuffer(m_screenWidth, m_screenHeight, bgfx::TextureFormat::BGRA8, samplerFlags);
+	m_sceneFrameBuffer = bgfx::createFrameBuffer(m_screenWidth, m_screenHeight, bgfx::TextureFormat::BGRA8, tsFlags);
 
 	m_glowWidth = m_screenWidth / 3;
 	m_glowHeight = m_screenHeight / 3;
 
-	m_glow0FrameBuffer = bgfx::createFrameBuffer(m_glowWidth, m_glowHeight, bgfx::TextureFormat::BGRA8, samplerFlags);
-	m_glow1FrameBuffer = bgfx::createFrameBuffer(m_glowWidth, m_glowHeight, bgfx::TextureFormat::BGRA8, samplerFlags);
+	m_glow0FrameBuffer = bgfx::createFrameBuffer(m_glowWidth, m_glowHeight, bgfx::TextureFormat::BGRA8, tsFlags);
+	m_glow1FrameBuffer = bgfx::createFrameBuffer(m_glowWidth, m_glowHeight, bgfx::TextureFormat::BGRA8, tsFlags);
 }
 
 void VectorDisplay::teardownResDependent()
@@ -878,10 +879,10 @@ void VectorDisplay::genLinetex()                                    // generate 
 	}
 
 	const uint32_t flags = 0
-		| BGFX_TEXTURE_U_CLAMP
-		| BGFX_TEXTURE_V_CLAMP
-		| BGFX_TEXTURE_MIN_POINT
-		| BGFX_TEXTURE_MAG_POINT
+		| BGFX_SAMPLER_U_CLAMP
+		| BGFX_SAMPLER_V_CLAMP
+		| BGFX_SAMPLER_MIN_POINT
+		| BGFX_SAMPLER_MAG_POINT
 		;
 
 	m_lineTexId = bgfx::createTexture2D(TEXTURE_SIZE, TEXTURE_SIZE, false, 1, bgfx::TextureFormat::BGRA8, flags, mem);
