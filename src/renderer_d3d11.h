@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2020 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2021 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
  */
 
@@ -204,14 +204,14 @@ namespace bgfx { namespace d3d11
 
 		void create(const ShaderD3D11* _vsh, const ShaderD3D11* _fsh)
 		{
-			BX_CHECK(NULL != _vsh->m_ptr, "Vertex shader doesn't exist.");
+			BX_ASSERT(NULL != _vsh->m_ptr, "Vertex shader doesn't exist.");
 			m_vsh = _vsh;
 			bx::memCopy(&m_predefined[0], _vsh->m_predefined, _vsh->m_numPredefined*sizeof(PredefinedUniform) );
 			m_numPredefined = _vsh->m_numPredefined;
 
 			if (NULL != _fsh)
 			{
-				BX_CHECK(NULL != _fsh->m_ptr, "Fragment shader doesn't exist.");
+				BX_ASSERT(NULL != _fsh->m_ptr, "Fragment shader doesn't exist.");
 				m_fsh = _fsh;
 				bx::memCopy(&m_predefined[m_numPredefined], _fsh->m_predefined, _fsh->m_numPredefined*sizeof(PredefinedUniform) );
 				m_numPredefined += _fsh->m_numPredefined;
@@ -287,7 +287,7 @@ namespace bgfx { namespace d3d11
 		void overrideInternal(uintptr_t _ptr);
 		void update(uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem);
 		void commit(uint8_t _stage, uint32_t _flags, const float _palette[][4]);
-		void resolve(uint8_t _resolve) const;
+		void resolve(uint8_t _resolve, uint32_t _layer, uint32_t _numLayers, uint32_t _mip) const;
 		TextureHandle getHandle() const;
 		DXGI_FORMAT getSrvFormat() const;
 

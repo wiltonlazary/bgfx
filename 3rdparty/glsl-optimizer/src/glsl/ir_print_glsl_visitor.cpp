@@ -50,7 +50,7 @@ static inline const char* get_precision_string (glsl_precision p)
 static const int tex_sampler_type_count = 7;
 // [glsl_sampler_dim]
 static const char* tex_sampler_dim_name[tex_sampler_type_count] = {
-	"1D", "2D", "3D", "Cube", "Rect", "Buf", "2D",
+	"1D", "2D", "3D", "Cube", "Rect", "Buf", "External",
 };
 static int tex_sampler_dim_size[tex_sampler_type_count] = {
 	1, 2, 3, 3, 2, 2, 2,
@@ -256,8 +256,6 @@ _mesa_print_ir_glsl(exec_list *instructions,
 			str.asprintf_append("#extension GL_ARB_shader_bit_encoding : enable\n");
 		if (state->EXT_texture_array_enable)
 			str.asprintf_append ("#extension GL_EXT_texture_array : enable\n");
-		if (state->OES_EGL_image_external_enable)
-			str.asprintf_append ("#extension GL_OES_EGL_image_external : enable\n");
 	}
 	
 	// remove unused struct declarations
@@ -901,8 +899,14 @@ void ir_print_glsl_visitor::visit(ir_texture *ir)
 	}
 
 	if (is_array && state->EXT_texture_array_enable)
+	{
+		if(state->language_version>=130)
+		{
+			buffer.asprintf_append ("%s", tex_sampler_dim_name[sampler_dim]);
+		}
 		buffer.asprintf_append ("Array");
-	if (ir->op == ir_tex && is_proj)
+	}
+	if ((ir->op == ir_tex || ir->op == ir_txl) && is_proj)
 		buffer.asprintf_append ("Proj");
 	if (ir->op == ir_txl)
 		buffer.asprintf_append ("Lod");
